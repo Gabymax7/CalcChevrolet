@@ -76,7 +76,7 @@
             border-radius: 0.25rem;
             box-sizing: border-box; 
             font-size: 1rem;
-            text-align: center; /* Alineación central de inputs */
+            text-align: center; 
             color: var(--color-text); 
             background-color: var(--color-input-bg);
             appearance: none; 
@@ -90,7 +90,7 @@
             padding: 0.75rem 0.5rem;
             border-radius: 0.25rem;
             font-weight: bold;
-            text-align: center; /* Alineación central de outputs */
+            text-align: center; 
         }
         .output-box {
             background-color: var(--color-output-bg);
@@ -412,6 +412,7 @@
             modelo: modeloSeleccionado,
             montoAcreditado: 0,
             entregaRequerida: 0,
+            montoSolicitadoBruto: 0, // <--- PROPIEDAD AÑADIDA
             cuotas: []
         };
         
@@ -439,6 +440,7 @@
         // Almacenar resultados para la función de compartir
         RESULTADOS_ACTUALES.montoAcreditado = montoAcreditado;
         RESULTADOS_ACTUALES.entregaRequerida = entregaRequerida;
+        RESULTADOS_ACTUALES.montoSolicitadoBruto = creditoSolicitado; // <--- VALOR SOLICITADO ALMACENADO
 
 
         // --- 3. Cálculo de Cuotas (Usando C/1000 y Validación Máximo $) ---
@@ -517,7 +519,7 @@
         document.getElementById('cuotas-disponibles').innerHTML = htmlCuotas;
     }
 
-    // --- FUNCIÓN DE COMPARTIR POR WHATSAPP (VERSIÓN FINAL) ---
+    // --- FUNCIÓN DE COMPARTIR POR WHATSAPP (FINAL: MUESTRA MONTO SOLICITADO) ---
     function compartirPorWhatsapp() {
         const R = RESULTADOS_ACTUALES;
         
@@ -526,12 +528,13 @@
             return;
         }
 
-        // --- Estructura del nuevo mensaje ---
+        // --- Estructura del mensaje ---
         let mensaje = `*Propuesta Chevrolet ${R.modelo} 0km*\n\n`;
         mensaje += `---------------------------------\n`;
         mensaje += `*Entrega Requerida*: ${formatoMoneda(R.entregaRequerida)}\n`;
-        // Ya no incluye "Neto Financiado"
-        mensaje += `*Monto Crédito*: ${formatoMoneda(R.montoAcreditado)}\n`; 
+        
+        // *** MUESTRA EL MONTO SOLICITADO BRUTO ***
+        mensaje += `*Monto Crédito*: ${formatoMoneda(R.montoSolicitadoBruto)} (Bruto)\n`; 
         mensaje += `---------------------------------\n`;
         mensaje += `*Opciones de Cuotas:*\n`;
 
