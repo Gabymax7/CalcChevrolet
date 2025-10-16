@@ -366,18 +366,29 @@
     // Variable global para almacenar resultados para la función de compartir
     let RESULTADOS_ACTUALES = {}; 
     
-    // --- UTILERÍAS ---
+    // --- UTILERÍAS DE FORMATO ---
 
     const limpiarNumero = (inputString) => {
         const cleaned = inputString.replace(/[^\d]/g, ''); 
         return parseInt(cleaned) || 0;
     };
 
-    const formatoMoneda = (numero) => {
+    // Nueva función: Mantiene centavos (para cuotas)
+    const formatoMonedaConDecimales = (numero) => {
         return new Intl.NumberFormat('es-AR', { 
             style: 'currency', 
             currency: 'ARS',
             minimumFractionDigits: 2 
+        }).format(numero);
+    };
+
+    // Nueva función: Quita centavos (para Entrega y Monto Crédito/Acreditado)
+    const formatoMonedaSinDecimales = (numero) => {
+        return new Intl.NumberFormat('es-AR', { 
+            style: 'currency', 
+            currency: 'ARS',
+            minimumFractionDigits: 0, 
+            maximumFractionDigits: 0
         }).format(numero);
     };
 
@@ -412,7 +423,7 @@
             modelo: modeloSeleccionado,
             montoAcreditado: 0,
             entregaRequerida: 0,
-            montoSolicitadoBruto: 0, // <--- PROPIEDAD AÑADIDA
+            montoSolicitadoBruto: 0, 
             cuotas: []
         };
         
@@ -440,7 +451,7 @@
         // Almacenar resultados para la función de compartir
         RESULTADOS_ACTUALES.montoAcreditado = montoAcreditado;
         RESULTADOS_ACTUALES.entregaRequerida = entregaRequerida;
-        RESULTADOS_ACTUALES.montoSolicitadoBruto = creditoSolicitado; // <--- VALOR SOLICITADO ALMACENADO
+        RESULTADOS_ACTUALES.montoSolicitadoBruto = creditoSolicitado; // VALOR SOLICITADO ALMACENADO
 
 
         // --- 3. Cálculo de Cuotas (Usando C/1000 y Validación Máximo $) ---
@@ -489,7 +500,7 @@
                                 <strong>${plazo} cuotas (TNA ${tnaDisplay}%)</strong>
                                 <span class="max-limit">Máx: $${maximoDisplay}</span>
                             </div>
-                            <span>${formatoMoneda(valorCuota)}</span>
+                            <span>${formatoMonedaConDecimales(valorCuota)}</span>
                         </li>`;
                     
                     // Almacenamos el resultado de la cuota
@@ -497,7 +508,7 @@
                         plazo: plazo,
                         tna: tnaDisplay,
                         maximo: maximoDisplay,
-                        valorCuota: formatoMoneda(valorCuota)
+                        valorCuota: formatoMonedaConDecimales(valorCuota) // Usa formato con decimales para las cuotas
                     });
                 }
             });
@@ -514,12 +525,13 @@
     }
 
     function actualizarOutputs(montoAcreditado, entregaRequerida, htmlCuotas) {
-        document.getElementById('montoAcreditado').textContent = formatoMoneda(montoAcreditado);
-        document.getElementById('entregaRequerida').textContent = formatoMoneda(entregaRequerida);
+        // Usa formato SIN decimales para Monto Acreditado y Entrega Requerida
+        document.getElementById('montoAcreditado').textContent = formatoMonedaSinDecimales(montoAcreditado);
+        document.getElementById('entregaRequerida').textContent = formatoMonedaSinDecimales(entregaRequerida);
         document.getElementById('cuotas-disponibles').innerHTML = htmlCuotas;
     }
 
-    // --- FUNCIÓN DE COMPARTIR POR WHATSAPP (FINAL: MUESTRA MONTO SOLICITADO) ---
+    // --- FUNCIÓN DE COMPARTIR POR WHATSAPP (FINAL) ---
     function compartirPorWhatsapp() {
         const R = RESULTADOS_ACTUALES;
         
@@ -531,10 +543,12 @@
         // --- Estructura del mensaje ---
         let mensaje = `*Propuesta Chevrolet ${R.modelo} 0km*\n\n`;
         mensaje += `---------------------------------\n`;
-        mensaje += `*Entrega Requerida*: ${formatoMoneda(R.entregaRequerida)}\n`;
         
-        // *** MUESTRA EL MONTO SOLICITADO BRUTO ***
-        mensaje += `*Monto Crédito*: ${formatoMoneda(R.montoSolicitadoBruto)} \n`; 
+        // **MUESTRA MONTO DE ENTREGA SIN DECIMALES**
+        mensaje += `*Entrega Requerida*: ${formatoMonedaSinDecimales(R.entregaRequerida)}\n`;
+        
+        // **MUESTRA EL MONTO SOLICITADO BRUTO SIN DECIMALES**
+        mensaje += `*Monto Crédito*: ${formatoMonedaSinDecimales(R.montoSolicitadoBruto)}\n`; 
         mensaje += `---------------------------------\n`;
         mensaje += `*Opciones de Cuotas:*\n`;
 
@@ -544,6 +558,7 @@
             if (cuota.valorCuota === "EXCEDE") {
                 mensaje += `\n*${cuota.plazo} cuotas* (TNA ${cuota.tna}% ${maximoDisplay}): EXCEDE LÍMITE ❌`;
             } else {
+                // Las cuotas usan el valor pre-formateado que incluye decimales (si existen centavos)
                 mensaje += `\n*${cuota.plazo} cuotas* (TNA ${cuota.tna}% ${maximoDisplay}): ${cuota.valorCuota}`;
             }
         });
@@ -559,7 +574,6 @@
 
     // Inicializar la calculadora al cargar la página
     window.onload = () => {
-        // Ejecutamos calcular para que se muestren los mensajes de "Ingrese valores"
         calcular(); 
     };
 </script>
