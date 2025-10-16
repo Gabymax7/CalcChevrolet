@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Chevrolet 0km</title>
+    <style>
+        /* --- ESTILOS BASE (LIGHT MODE) --- */
+        :root {
+            /* Colores */
+            --color-primary: #004d99; /* Azul Chevrolet */
+            --color-text: #212529; 
+            --color-background: #f8f9fa; 
+            --color-container-bg: #ffffff;
+            --color-input-bg: #f8f9fa;
+            --color-input-border: #ced4da;
+            --color-output-bg: #e9ecef; 
+            --color-output-text: #004d99;
+            --color-fixed-bg: #f1f3f4; 
+            --color-divider: #dee2e6;
+            --color-disabled: #ff4d4d; 
+            --color-disabled-bg-soft: #ffebeb; 
+            --color-note: #6c757d; 
+            
+            /* Tipografía */
+            font-size: 16px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--color-background);
+            display: flex;
+            justify-content: center;
+            align-items: center; 
+            padding: 1.5rem; 
+            color: var(--color-text);
+            min-height: 100vh; 
+        }
+        
+        .calculator-container {
+            background-color: var(--color-container-bg);
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 550px; 
+            margin: auto; 
+        }
+
+        h1 {
+            color: var(--color-primary);
+            text-align: center; 
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--color-primary);
+            padding-bottom: 0.5rem;
+            font-size: 1.75rem;
+        }
+        
+        /* --- CONTROLES Y GRUPOS --- */
+        .input-group { 
+            margin-bottom: 1rem;
+            text-align: center; 
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 0.3rem;
+            font-weight: 600; 
+            text-align: center; 
+        }
+        
+        /* Regla general de inputs/selects */
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 0.75rem 0.5rem;
+            border: 1px solid var(--color-input-border);
+            border-radius: 0.25rem;
+            box-sizing: border-box; 
+            font-size: 1rem;
+            text-align: center; /* Alineación central de inputs */
+            color: var(--color-text); 
+            background-color: var(--color-input-bg);
+            appearance: none; 
+            -webkit-appearance: none;
+            -moz-appearance: textfield;
+        }
+
+        /* Regla para los outputs: centramos los valores de dinero y porcentajes */
+        .output-box,
+        .output-fixed {
+            padding: 0.75rem 0.5rem;
+            border-radius: 0.25rem;
+            font-weight: bold;
+            text-align: center; /* Alineación central de outputs */
+        }
+        .output-box {
+            background-color: var(--color-output-bg);
+            border: 1px solid var(--color-primary);
+            font-size: 1.1rem;
+            color: var(--color-output-text);
+        }
+        .output-fixed {
+            background-color: var(--color-fixed-bg);
+            border: 1px solid var(--color-divider);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--color-fixed-text);
+        }
+
+        /* Solución a la advertencia de compatibilidad: */
+        .input-group input[type=number]::-webkit-inner-spin-button, 
+        .input-group input[type=number]::-webkit-outer-spin-button { 
+            appearance: none; 
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .input-group input[type=number] {
+            -moz-appearance: textfield;
+        }
+        
+        /* --- OUTPUTS Y SECCIONES --- */
+        
+        .section-header {
+            color: var(--color-primary);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            padding-top: 0.5rem;
+            border-top: 1px dashed var(--color-divider);
+            font-size: 1.3rem;
+            text-align: center; 
+        }
+        
+        #cuotas-disponibles {
+            list-style-type: none;
+            padding: 0;
+            text-align: center; 
+        }
+        #cuotas-disponibles li {
+            background-color: var(--color-fixed-bg);
+            margin-bottom: 0.4rem;
+            padding: 0.6rem 0.75rem;
+            border-radius: 0.25rem;
+            font-weight: normal;
+            display: flex;
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 0.95rem;
+        }
+        .quota-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .quota-details strong {
+            color: var(--color-output-text);
+        }
+        .quota-details .max-limit {
+            font-size: 0.8rem;
+            color: var(--color-note);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+        #cuotas-disponibles li span {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .disabled-option {
+            background-color: var(--color-disabled-bg-soft) !important; 
+            color: var(--color-disabled);
+            border: 1px dashed var(--color-disabled);
+        }
+        .disabled-option span {
+            color: var(--color-disabled);
+            font-weight: 500;
+            text-align: right;
+        }
+        .note {
+            font-size: 0.75rem;
+            color: var(--color-note);
+            margin-top: 0.75rem;
+            text-align: center;
+        }
+        
+        /* --- ESTILOS ADICIONALES PARA EL BOTÓN --- */
+        #compartirBtn {
+            width: 100%;
+            padding: 0.8rem;
+            margin-top: 1.5rem;
+            border: none;
+            border-radius: 0.25rem;
+            background-color: #25D366; /* Verde de WhatsApp */
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #compartirBtn:hover {
+            background-color: #1DA851; /* Verde más oscuro al pasar el mouse */
+        }
+        #compartirBtn:disabled {
+             background-color: #a4a9ad;
+             cursor: not-allowed;
+        }
+        
+        /* --- MODO OSCURO (prefers-color-scheme: dark) --- */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-primary: #8AB4F8; 
+                --color-text: #E8EAED; 
+                --color-background: #18191a; 
+                --color-container-bg: #242526; 
+                --color-input-bg: #3A3B3C;
+                --color-input-border: #4e4f50;
+                --color-output-bg: #3A3B3C;
+                --color-output-text: #8AB4F8; 
+                --color-fixed-bg: #3A3B3C;
+                --color-fixed-text: #E8EAED;
+                --color-note: #BDC1C6;
+                --color-divider: #4e4f50;
+                --color-disabled: #FA7070;
+                --color-disabled-bg-soft: #382c2c;
+            }
+            #compartirBtn {
+                background-color: #25D366; 
+                color: #000000;
+            }
+            #compartirBtn:hover {
+                background-color: #1DA851;
+            }
+        }
+
+        /* --- MEDIA QUERY PARA RESPONSIVE (Móviles pequeños) --- */
+        @media (max-width: 576px) {
+            body {
+                padding: 1rem 0.5rem;
+                align-items: flex-start; 
+            }
+            .calculator-container {
+                padding: 1.25rem;
+                border-radius: 0; 
+                box-shadow: none; 
+            }
+            #cuotas-disponibles li {
+                flex-direction: column;
+                align-items: center; 
+            }
+            .quota-details {
+                align-items: center; 
+            }
+            .quota-details .max-limit {
+                 margin-top: 0;
+            }
+            #cuotas-disponibles li span {
+                text-align: center;
+                margin-top: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="calculator-container">
+    <h1>Calculadora Chevrolet 0km</h1>
+
+    <div class="input-group">
+        <label for="modelo">Modelo</label>
+        <select id="modelo" onchange="calcular()">
+            <option value="Onix">Onix</option>
+            <option value="Tracker">Tracker</option>
+            <option value="Spin">Spin</option>
+            <option value="S10">S10</option>
+            <option value="Montana">Montana</option>
+            <option value="Trailblazer">Trailblazer</option>
+            <option value="Spark EUV">Spark EUV</option>
+        </select>
+    </div>
+
+    <h2 class="section-header">Entradas Clave</h2>
+    
+    <div class="input-group">
+        <label for="valorVehiculo">1. Valor del Vehículo ($)</label>
+        <input type="text" id="valorVehiculo" value="" oninput="formatAndCalculate(this)" placeholder="Ej: 45000000">
+    </div>
+
+    <div class="input-group">
+        <label for="creditoSolicitadoInput">2. Monto Solicitado (Crédito Bruto) ($)</label>
+        <input type="text" id="creditoSolicitadoInput" value="" oninput="formatAndCalculate(this)" placeholder="Ej: 10000000">
+    </div>
+    
+    <div class="input-group">
+        <label>3. Porcentaje de Gastos de Otorgamiento (Fijo)</label>
+        <div class="output-fixed">15%</div>
+    </div>
+
+    <h2 class="section-header">Resultados del Financiamiento</h2>
+
+    <div class="input-group">
+        <label>4. Monto Acreditado</label>
+        <div id="montoAcreditado" class="output-box">Ingrese valores</div>
+    </div>
+
+    <div class="input-group">
+        <label>5. Entrega Requerida</label>
+        <div id="entregaRequerida" class="output-box">Ingrese valores</div>
+    </div>
+    
+    <h2 class="section-header">Cálculo de Cuotas</h2>
+
+    <div class="input-group">
+        <label>6. Cuotas Disponibles (12, 18, 30 meses)</label>
+        <ul id="cuotas-disponibles">
+            </ul>
+    </div>
+    
+    <p class="note">Las opciones no calculadas exceden el Máximo permitido para el crédito.</p>
+
+    <div class="input-group">
+        <button id="compartirBtn" onclick="compartirPorWhatsapp()">Compartir por WhatsApp 📱</button>
+    </div>
+</div>
+
+<script>
+    // --- DATOS DE FINANCIACIÓN Y PARÁMETROS GLOBALES ---
+    const DATOS_FINANCIACION = {
+        "Onix": {
+            12: { coef: 83.33, tna: 0.00, maximo: 12000000 },
+            18: { coef: 61.66, tna: 0.099, maximo: 16000000 },
+            30: { coef: 49.23, tna: 0.249, maximo: 18000000 },
+        },
+        "Tracker": {
+            12: { coef: 83.33, tna: 0.00, maximo: 12000000 },
+            18: { coef: 61.66, tna: 0.099, maximo: 16000000 },
+            30: { coef: 49.23, tna: 0.249, maximo: 18000000 },
+        },
+        "Spin": {
+            12: { coef: 83.33, tna: 0.00, maximo: 12000000 },
+            18: { coef: 61.66, tna: 0.099, maximo: 16000000 },
+            30: { coef: 49.23, tna: 0.249, maximo: 20000000 },
+        },
+        "S10": {
+            12: { coef: 83.33, tna: 0.00, maximo: 20000000 },
+            18: { coef: 68.81, tna: 0.149, maximo: 20000000 },
+            30: { coef: 56.18, tna: 0.349, maximo: 25000000 },
+        },
+        "Montana": {
+            12: { coef: 83.33, tna: 0.00, maximo: 12000000 },
+            18: { coef: 61.66, tna: 0.099, maximo: 16000000 },
+            30: { coef: 49.23, tna: 0.249, maximo: 20000000 },
+        },
+        "Trailblazer": {
+            12: { coef: 83.33, tna: 0.00, maximo: 20000000 },
+            18: { coef: 68.81, tna: 0.149, maximo: 25000000 },
+            30: { coef: 56.18, tna: 0.349, maximo: 25000000 },
+        },
+        "Spark EUV": {
+            12: { coef: 83.33, tna: 0.00, maximo: 12000000 },
+            18: { coef: 61.66, tna: 0.099, maximo: 16000000 },
+            30: { coef: 49.23, tna: 0.249, maximo: 18000000 },
+        }
+    };
+
+    const PORCENTAJE_GASTOS = 0.15; 
+    const PLAZOS_DISPONIBLES = [12, 18, 30];
+
+    // Variable global para almacenar resultados para la función de compartir
+    let RESULTADOS_ACTUALES = {}; 
+    
+    // --- UTILERÍAS ---
+
+    const limpiarNumero = (inputString) => {
+        const cleaned = inputString.replace(/[^\d]/g, ''); 
+        return parseInt(cleaned) || 0;
+    };
+
+    const formatoMoneda = (numero) => {
+        return new Intl.NumberFormat('es-AR', { 
+            style: 'currency', 
+            currency: 'ARS',
+            minimumFractionDigits: 2 
+        }).format(numero);
+    };
+
+    const formatoMiles = (numero) => {
+        return new Intl.NumberFormat('es-AR', { 
+            maximumFractionDigits: 0
+        }).format(numero);
+    };
+
+    function formatAndCalculate(inputElement) {
+        const valorLimpio = limpiarNumero(inputElement.value);
+        
+        if (valorLimpio > 0) {
+             inputElement.value = formatoMiles(valorLimpio);
+        } else if (inputElement.value.trim() === '') {
+             inputElement.value = ''; 
+        }
+
+        calcular();
+    }
+    
+    // --- FUNCIÓN PRINCIPAL DE CÁLCULO ---
+
+    function calcular() {
+        // --- 1. Obtener Entradas ---
+        const modeloSeleccionado = document.getElementById('modelo').value;
+        const valorVehiculo = limpiarNumero(document.getElementById('valorVehiculo').value);
+        const creditoSolicitado = limpiarNumero(document.getElementById('creditoSolicitadoInput').value);
+
+        // Inicializamos los resultados actuales
+        RESULTADOS_ACTUALES = {
+            modelo: modeloSeleccionado,
+            montoAcreditado: 0,
+            entregaRequerida: 0,
+            cuotas: []
+        };
+        
+        // Si faltan ambos valores, detenemos el cálculo y mostramos mensajes
+        if (valorVehiculo === 0 && creditoSolicitado === 0) {
+            document.getElementById('montoAcreditado').textContent = "Ingrese valores";
+            document.getElementById('entregaRequerida').textContent = "Ingrese valores";
+            document.getElementById('cuotas-disponibles').innerHTML = '<li>Ingrese el valor del vehículo y el crédito solicitado para ver las cuotas.</li>';
+            
+            document.getElementById('compartirBtn').disabled = true;
+            return; 
+        } else {
+             document.getElementById('compartirBtn').disabled = false;
+        }
+
+
+        // --- 2. Lógica de Cálculo Inversa (Acreditado y Entrega) ---
+        const montoAcreditado = creditoSolicitado * (1 - PORCENTAJE_GASTOS);
+        let entregaRequerida = valorVehiculo - montoAcreditado;
+        
+        if (entregaRequerida < 0) {
+            entregaRequerida = 0;
+        }
+        
+        // Almacenar resultados para la función de compartir
+        RESULTADOS_ACTUALES.montoAcreditado = montoAcreditado;
+        RESULTADOS_ACTUALES.entregaRequerida = entregaRequerida;
+
+
+        // --- 3. Cálculo de Cuotas (Usando C/1000 y Validación Máximo $) ---
+        
+        let htmlCuotas = '';
+        const datosModelo = DATOS_FINANCIACION[modeloSeleccionado];
+        let hayOpcionesDisponibles = false;
+
+        if (creditoSolicitado > 0 && datosModelo) {
+            PLAZOS_DISPONIBLES.forEach(plazo => {
+                const dataPlazo = datosModelo[plazo];
+                if (dataPlazo) {
+                    
+                    const maximoDisplay = formatoMiles(dataPlazo.maximo);
+                    
+                    // VALIDACIÓN CLAVE: Si el crédito solicitado excede el máximo permitido
+                    if (creditoSolicitado > dataPlazo.maximo) {
+                        htmlCuotas += `
+                            <li class="disabled-option">
+                                <div class="quota-details">
+                                    <strong>${plazo} cuotas</strong>
+                                    <span class="max-limit">Máx: $${maximoDisplay}</span>
+                                </div>
+                                <span>❌ Excede Máximo</span>
+                            </li>`;
+                        // Almacenamos el estado de la cuota como "Excede"
+                        RESULTADOS_ACTUALES.cuotas.push({
+                            plazo: plazo,
+                            tna: (dataPlazo.tna * 100).toFixed(2),
+                            maximo: maximoDisplay,
+                            valorCuota: "EXCEDE"
+                        });
+                        return; 
+                    }
+
+                    // Si no excede, calcular la cuota normalmente
+                    const factorMil = creditoSolicitado / 1000;
+                    const valorCuota = factorMil * dataPlazo.coef;
+                    const tnaDisplay = (dataPlazo.tna * 100).toFixed(2);
+                    hayOpcionesDisponibles = true;
+                    
+                    // Construcción de la Cuota con el Máximo
+                    htmlCuotas += `
+                        <li>
+                            <div class="quota-details">
+                                <strong>${plazo} cuotas (TNA ${tnaDisplay}%)</strong>
+                                <span class="max-limit">Máx: $${maximoDisplay}</span>
+                            </div>
+                            <span>${formatoMoneda(valorCuota)}</span>
+                        </li>`;
+                    
+                    // Almacenamos el resultado de la cuota
+                    RESULTADOS_ACTUALES.cuotas.push({
+                        plazo: plazo,
+                        tna: tnaDisplay,
+                        maximo: maximoDisplay,
+                        valorCuota: formatoMoneda(valorCuota)
+                    });
+                }
+            });
+        } 
+        
+        if (!hayOpcionesDisponibles && creditoSolicitado > 0) {
+             htmlCuotas = `<li>El monto solicitado no aplica para las opciones disponibles de este modelo.</li>`;
+        } else if (creditoSolicitado === 0) {
+             htmlCuotas = `<li>Ingrese el monto del crédito solicitado.</li>`;
+        }
+
+        // --- 4. Actualizar la Interfaz ---
+        actualizarOutputs(montoAcreditado, entregaRequerida, htmlCuotas);
+    }
+
+    function actualizarOutputs(montoAcreditado, entregaRequerida, htmlCuotas) {
+        document.getElementById('montoAcreditado').textContent = formatoMoneda(montoAcreditado);
+        document.getElementById('entregaRequerida').textContent = formatoMoneda(entregaRequerida);
+        document.getElementById('cuotas-disponibles').innerHTML = htmlCuotas;
+    }
+
+    // --- FUNCIÓN DE COMPARTIR POR WHATSAPP (VERSIÓN FINAL) ---
+    function compartirPorWhatsapp() {
+        const R = RESULTADOS_ACTUALES;
+        
+        if (!R || (R.montoAcreditado === 0 && R.entregaRequerida === 0)) {
+            alert("Por favor, ingrese el valor del vehículo y el crédito solicitado antes de compartir.");
+            return;
+        }
+
+        // --- Estructura del nuevo mensaje ---
+        let mensaje = `*Propuesta Chevrolet ${R.modelo} 0km*\n\n`;
+        mensaje += `---------------------------------\n`;
+        mensaje += `*Entrega Requerida*: ${formatoMoneda(R.entregaRequerida)}\n`;
+        // Ya no incluye "Neto Financiado"
+        mensaje += `*Monto Crédito*: ${formatoMoneda(R.montoAcreditado)}\n`; 
+        mensaje += `---------------------------------\n`;
+        mensaje += `*Opciones de Cuotas:*\n`;
+
+        R.cuotas.forEach(cuota => {
+            const maximoDisplay = `(Máx $${cuota.maximo})`;
+
+            if (cuota.valorCuota === "EXCEDE") {
+                mensaje += `\n*${cuota.plazo} cuotas* (TNA ${cuota.tna}% ${maximoDisplay}): EXCEDE LÍMITE ❌`;
+            } else {
+                mensaje += `\n*${cuota.plazo} cuotas* (TNA ${cuota.tna}% ${maximoDisplay}): ${cuota.valorCuota}`;
+            }
+        });
+        // ------------------------------------
+
+        // Codificar el mensaje
+        const mensajeCodificado = encodeURIComponent(mensaje);
+        
+        // Crear y abrir el enlace de WhatsApp
+        const urlWhatsapp = `https://api.whatsapp.com/send?text=${mensajeCodificado}`;
+        window.open(urlWhatsapp, '_blank');
+    }
+
+    // Inicializar la calculadora al cargar la página
+    window.onload = () => {
+        // Ejecutamos calcular para que se muestren los mensajes de "Ingrese valores"
+        calcular(); 
+    };
+</script>
+</body>
+</html>
